@@ -16,20 +16,39 @@ Net::SMS::TxtLocal - Send SMS messages using txtlocal.co.uk
 
 =head1 SYNOPSIS
 
-    use Net::SMS::TxtLocal;
+    my $txtlocal = Net::SMS::TxtLocal->new(
+        uname => 'you@domain.com',
+        pword => 'secret',
+        from  => 'Your Name',        # optional
+    );
+    
+    # get the current balance
+    my $balance = $txtlocal->get_credit_balance();
+    
+    # send a message
+    $txtlocal->send_message(
+        {
+            message => "This is a test message from Net::SMS::TxtLocal",
+            to      => [ '447890123456' ],
+        }
+    );
 
-=for author to fill in:
-    Brief code example(s) here showing commonest usage(s).
-    This section will be as far as many users bother reading
-    so make it as educational and exeplary as possible.
-  
-  
 =head1 DESCRIPTION
 
-=for author to fill in:
-    Write a full description of the module and its features here.
-    Use subsections (=head2, =head3) as appropriate.
+This module is a super simple interface to the TxtLocal API which lets you send
+SMS messages from your code.
 
+=head1 ABOUT TXTLOCAL
+
+TxtLocal is a UK based SMS service which lets you send messages to mobiles
+worldwide. Their website is clean, their pricing reasonable and their API pretty
+good too.
+
+If you need to create an account and use this link some pennies might flow back
+into the author's pockets: L<http://www.txtlocal.co.uk/?tlrx=52009>
+
+If this shameless commercialism offends you use this link instead:
+L<http://www.txtlocal.co.uk/>.
 
 =cut
 
@@ -64,6 +83,23 @@ has ua => (
 );
 
 =head1 METHODS
+
+=head2 new
+
+    $txtlocal = Net::SMS::TxtLocal->new(
+        uname => 'you@domain.com',
+        pword => 'secret',
+        from  => 'Your Name',  # optional
+    );
+
+Create a sender object. C<uname> and C<pword> are required and should be your
+login to the TxtLocal system.
+
+C<from> is optional and is added to any messages sent.
+
+=cut
+
+# no code here - new is provided by Moose
 
 =head2 get_credit_balance
 

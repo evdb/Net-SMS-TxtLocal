@@ -11,3 +11,6 @@ cover_db
 pod2htm*.tmp
 Net-SMS-TxtLocal-*
 t/set_env.bash
+MANIFEST.bak
+META.yml
+inc
