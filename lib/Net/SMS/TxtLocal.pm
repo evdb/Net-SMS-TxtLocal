@@ -77,15 +77,18 @@ to their servers and is a good way to test that the connection is available.
 sub get_credit_balance {
     my $self = shift;
 
-    my $response = $self->_make_request(
+    my $credits = $self->_make_request(
         {
             path  => '/getcredits.php',
             query => {},
         }
     );
 
-    die $response;
+    # clean up the repsonse and check it makes sense
+    $credits =~ s{ \s* (\d+) \s* }{$1}x;
+    croak "Bad credit value: '$credits' " if $credits =~ m{\D};
 
+    return $credits + 0;
 }
 
 =head2 send_message
