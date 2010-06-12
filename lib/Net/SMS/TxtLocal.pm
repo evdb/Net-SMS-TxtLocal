@@ -1,13 +1,14 @@
-use warnings;
-use strict;
-
 package Net::SMS::TxtLocal;
 
 use Carp;
+use LWP::UserAgent;
+use Moose;
+use namespace::autoclean;
+use JSON;
+
 use 5.006;
 
 our $VERSION = '0.01';
-
 
 =head1 NAME
 
@@ -30,37 +31,150 @@ Net::SMS::TxtLocal - Send SMS messages using txtlocal.co.uk
     Use subsections (=head2, =head3) as appropriate.
 
 
-=head1 INTERFACE 
+=cut
 
-=for author to fill in:
-    Write a separate section listing the public components of the modules
-    interface. These normally consist of either subroutines that may be
-    exported, or methods that may be called on objects belonging to the
-    classes provided by the module.
+has uname => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1
+);
 
+has pword => (
+    is       => 'ro',
+    isa      => 'Str',
+    required => 1
+);
 
-=head1 DIAGNOSTICS
+has from => (
+    is  => 'ro',
+    isa => 'Str',
+);
 
-=for author to fill in:
-    List every single error and warning message that the module can
-    generate (even the ones that will "never happen"), with a full
-    explanation of each problem, one or more likely causes, and any
-    suggested remedies.
+has host => (
+    is      => 'ro',
+    isa     => 'Str',
+    default => 'http://www.txtlocal.co.uk'
+);
 
-=over
+has ua => (
+    is      => 'ro',
+    isa     => 'Object',
+    default => sub { LWP::UserAgent->new },
+    lazy    => 1,
+);
 
-=item C<< Error message here, perhaps with %s placeholders >>
+=head1 METHODS
 
-[Description of error here]
+=head2 get_credit_balance
 
-=item C<< Another error message here >>
+    my $credit_balance = $txtlocal->get_credit_balance();
 
-[Description of error here]
+Get the credit balance for this account from TxtLocal. This will try to connect
+to their servers and is a good way to test that the connection is available.
 
-[Et cetera, et cetera]
+=cut
 
-=back
+sub get_credit_balance {
+    my $self = shift;
 
+    my $response = $self->_make_request(
+        {
+            path  => '/getcredits.php',
+            query => {},
+        }
+    );
+
+    die $response;
+
+}
+
+=head2 send_message
+
+    $bool = $txtlocal->send_message(
+        {
+            message => 'the text of the message',
+            to      => ['447890123456'],
+        }
+    );
+
+Send a message to the numbers given in the array.
+
+=cut
+
+sub send_message {
+    my $self = shift;
+    my $args = shift;
+
+    my $message = $args->{message}
+      || croak "required parameter 'message' missing";
+    my $to = $args->{to} || croak "required parameter 'to' missing";
+
+    my $response = $self->_make_request(
+        {
+            path  => '/sendsmspost.php',
+            query => {
+                from         => $self->from,
+                message      => $message,
+                selectednums => join( ',', @$to ),
+            },
+        }
+    );
+
+    return 1;
+}
+
+=head1 PRIVATE METHODS
+
+=head2 _make_request
+
+    my $response = $txtlocal->_make_request(
+        {
+            path  => '/path/to/page.php',
+            query => { foo => 'bar' },
+        }
+    );
+
+Make a POST request to the TxtLocal servers. The C<uname> and C<pword> will be
+added to the request and content returned - either as a string or a
+datastructure.
+
+=cut
+
+sub _make_request {
+    my $self = shift;
+    my $args = shift;
+
+    my $path  = $args->{path}  || croak "required parameter 'path' missing";
+    my $query = $args->{query} || croak "required parameter 'query' missing";
+
+    my $url        = $self->host . $path;
+    my $post_query = {
+        uname => $self->uname,
+        pword => $self->pword,
+        json  => 1,
+        %$query,
+    };
+
+    my $response = $self->ua->post( $url, $post_query );
+    croak "Error with request" unless $response->is_success;
+
+    my $content = $response->content;
+
+    # check to see if a string error has been returned.
+    croak "Invalid request - please check uname and pword"
+      if $content =~ m{ \A \s* invalid \s* \z }xi;
+
+    # return the response unless it looks like JSON
+    return $content unless $content =~ m{ \A \s* \{ \s* "\w }x;
+
+    # decode the JSON
+    my $data = decode_json($content);
+
+    # check for the error key and croak if it is there
+    croak "Error with request: '$data->{ERROR}'" if $data->{ERROR};
+
+    return $data;
+}
 
 =head1 BUGS
 
