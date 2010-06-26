@@ -17,7 +17,7 @@ plan tests => 4;
 my $txtlocal = Net::SMS::TxtLocal->new(
     uname => $ENV{NET_SMS_TEST_UNAME},
     pword => $ENV{NET_SMS_TEST_PWORD},
-    from  => 'NetSMSTxtLocal'
+    from  => 'TxtLocal',
 );
 ok $txtlocal, "created txtlocal object";
 
