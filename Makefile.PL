@@ -6,7 +6,7 @@ name 'Net-SMS-TxtLocal';
 all_from 'lib/Net/SMS/TxtLocal.pm';
 
 requires 'Carp';
-requires 'JSON';
+requires 'JSON' => '2.16';
 requires 'LWP::UserAgent';
 requires 'Moose';
 requires 'namespace::autoclean';
