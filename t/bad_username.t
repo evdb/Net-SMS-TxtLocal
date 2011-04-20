@@ -27,7 +27,7 @@ ok $txtlocal, "created an object";
 # try to get the credit level
 throws_ok                                                #
   sub { $txtlocal->get_credit_balance },                 #
-  qr{Invalid request - please check uname and pword},    #
+  qr{Invalid login},                                     #
   "died trying to get credit balance";
 
 # try to get the credit level and check that it dies with a helpful message

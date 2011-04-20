@@ -113,12 +113,14 @@ to their servers and is a good way to test that the connection is available.
 sub get_credit_balance {
     my $self = shift;
 
-    my $credits = $self->_make_request(
+    my $response = $self->_make_request(
         {
             path  => '/getcredits.php',
             query => {},
         }
     );
+
+    my $credits = $response->{Credits} || 0;
 
     # clean up the repsonse and check it makes sense
     $credits =~ s{ \s* (\d+) \s* }{$1}x;
@@ -210,7 +212,7 @@ sub _make_request {
     my $data = decode_json($content);
 
     # check for the error key and croak if it is there
-    croak "Error with request: '$data->{ERROR}'" if $data->{ERROR};
+    croak "Error with request: '$data->{Error}'" if $data->{Error};
 
     return $data;
 }
